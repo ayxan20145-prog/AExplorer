@@ -76,6 +76,14 @@ fn main() -> io::Result<()> {
                     KeyCode::Char('h') => {
                         dir.pop();
                     }
+                    KeyCode::Char('l') => {
+                        if let Some((path, is_dir)) = entries_list.get(selected) {
+                            if *is_dir {
+                                dir = path.clone();
+                                selected = 0;
+                            }
+                        }
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
