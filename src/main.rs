@@ -156,6 +156,9 @@ fn main() -> io::Result<()> {
                             }
                         }
                     }
+                    KeyCode::Char('t') => {
+                        open_terminal(&dir);
+                    }
                     KeyCode::Char('?') => {
                         execute!(
                             stdout,
@@ -167,6 +170,8 @@ fn main() -> io::Result<()> {
                                  m -> Move\r\n\
                                  r -> Rename\r\n\
                                  . -> Toggle hidden\r\n\
+                                 o -> Open in editor\r\n\
+                                 t -> Open terminal here\r\n\
                                  q -> Quit"
                             ))
                         )?;
@@ -330,6 +335,53 @@ fn rename(path: &Path) -> io::Result<()> {
     fs::rename(path, new_path)?;
 
     Ok(())
+}
+fn open_terminal(dir: &Path) {
+    if Command::new("xdg-terminal-exec")
+        .arg("--dir")
+        .arg(dir)
+        .spawn()
+        .is_ok()
+    {
+        return;
+    }
+    if Command::new("ptyxis")
+        .arg("--working-directory")
+        .arg(dir)
+        .arg("--new-window")
+        .spawn()
+        .is_ok()
+    {
+        return;
+    }
+
+    let cmds: &[(&str, &[&str])] = &[
+        ("x-terminal-emulator", &[]),
+        ("gnome-terminal", &["--working-directory"]),
+        ("konsole", &["--workdir"]),
+        ("xfce4-terminal", &["--working-directory"]),
+        ("kitty", &["--directory"]),
+        ("alacritty", &["--working-directory"]),
+        ("wezterm", &["start", "--cwd"]),
+        ("xterm", &[]),
+    ];
+
+    for (term, args) in cmds {
+        let mut command = Command::new(term);
+
+        if args.is_empty() {
+            command.current_dir(dir);
+        } else {
+            command.args(*args).arg(dir);
+        }
+
+        if command.spawn().is_ok() {
+            return;
+        }
+    }
+
+    println!("Failed to open terminal");
+    pause();
 }
 fn pause() {
     let mut pause = String::new();
