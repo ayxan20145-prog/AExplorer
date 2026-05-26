@@ -119,6 +119,30 @@ fn main() -> io::Result<()> {
                             enable_raw_mode()?;
                         }
                     }
+                    KeyCode::Char('r') => {
+                        if let Some((path, _is_dir)) = entries_list.get(selected) {
+                            disable_raw_mode()?;
+                            rename(path)?;
+                            enable_raw_mode()?;
+                        }
+                    }
+                    KeyCode::Char('?') => {
+                        execute!(
+                            stdout,
+                            Print(format!(
+                                "a -> Create dir\r\n\
+                                 f -> Create file\r\n\
+                                 d -> Delte\r\n\
+                                 c -> Copy\r\n\
+                                 m -> Move\r\n\
+                                 r -> Rename\r\n\
+                                 q -> Quit"
+                            ))
+                        )?;
+                        disable_raw_mode()?;
+                        pause();
+                        enable_raw_mode()?;
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
@@ -257,6 +281,22 @@ fn movee(path: &Path) -> io::Result<()> {
     let dest_path = Path::new(dest);
 
     fs::rename(path, dest_path)?;
+
+    Ok(())
+}
+fn rename(path: &Path) -> io::Result<()> {
+    let mut name = String::new();
+
+    print!("Enter the name: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut name)?;
+
+    let name = name.trim();
+
+    let parent = path.parent().unwrap_or(Path::new("."));
+    let new_path = parent.join(name);
+
+    fs::rename(path, new_path)?;
 
     Ok(())
 }
