@@ -9,6 +9,7 @@ use crossterm::{
 use std::env;
 use std::fs;
 use std::io::{self, Write};
+use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -100,6 +101,16 @@ fn main() -> io::Result<()> {
                             delete(path, *is_dir)?;
                         }
                     }
+                    KeyCode::Char('c') => {
+                        if let Some((path, is_dir)) = entries_list.get(selected) {
+                            if *is_dir {
+                            } else {
+                                disable_raw_mode()?;
+                                copy_file(path)?;
+                                enable_raw_mode()?;
+                            }
+                        }
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
@@ -111,7 +122,7 @@ fn main() -> io::Result<()> {
     disable_raw_mode()?;
     Ok(())
 }
-fn create_dir(path: &PathBuf) -> io::Result<()> {
+fn create_dir(path: &Path) -> io::Result<()> {
     let mut name = String::new();
 
     print!("Enter the directory name: ");
@@ -129,7 +140,7 @@ fn create_dir(path: &PathBuf) -> io::Result<()> {
 
     Ok(())
 }
-fn create_file(path: &PathBuf) -> io::Result<()> {
+fn create_file(path: &Path) -> io::Result<()> {
     let mut name = String::new();
 
     print!("Enter the file name: ");
@@ -157,7 +168,7 @@ fn create_file(path: &PathBuf) -> io::Result<()> {
 
     Ok(())
 }
-fn delete(path: &PathBuf, is_dir: bool) -> io::Result<()> {
+fn delete(path: &Path, is_dir: bool) -> io::Result<()> {
     print!(
         "Are you sure want to delete: {}? (y/n)",
         path.file_name().unwrap_or_default().to_string_lossy()
@@ -178,6 +189,20 @@ fn delete(path: &PathBuf, is_dir: bool) -> io::Result<()> {
             _ => return Ok(()),
         }
     }
+    Ok(())
+}
+fn copy_file(path: &Path) -> io::Result<()> {
+    let mut dest = String::new();
+
+    print!("Enter the destination: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut dest)?;
+
+    let dest = dest.trim();
+    let dest_path = Path::new(dest);
+
+    fs::copy(path, dest_path)?;
+
     Ok(())
 }
 fn pause() {
