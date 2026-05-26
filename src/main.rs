@@ -103,12 +103,13 @@ fn main() -> io::Result<()> {
                     }
                     KeyCode::Char('c') => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
+                            disable_raw_mode()?;
                             if *is_dir {
+                                copy_dir(path)?;
                             } else {
-                                disable_raw_mode()?;
                                 copy_file(path)?;
-                                enable_raw_mode()?;
                             }
+                            enable_raw_mode()?;
                         }
                     }
                     KeyCode::Char('q') => break,
@@ -202,6 +203,39 @@ fn copy_file(path: &Path) -> io::Result<()> {
     let dest_path = Path::new(dest);
 
     fs::copy(path, dest_path)?;
+
+    Ok(())
+}
+fn copy_dir(path: &Path) -> io::Result<()> {
+    let mut dest = String::new();
+
+    print!("Enter the destination: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut dest)?;
+
+    let dest = dest.trim();
+    let dest_path = Path::new(dest);
+
+    copy_dir_recursive(path, dest_path)?;
+
+    Ok(())
+}
+fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+    fs::create_dir_all(dst)?;
+
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+
+        if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path)?;
+        }
+    }
 
     Ok(())
 }
