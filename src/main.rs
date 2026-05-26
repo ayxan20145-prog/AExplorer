@@ -85,6 +85,16 @@ fn main() -> io::Result<()> {
                             }
                         }
                     }
+                    KeyCode::Char('a') => {
+                        disable_raw_mode()?;
+                        create_dir(&dir)?;
+                        enable_raw_mode()?;
+                    }
+                    KeyCode::Char('f') => {
+                        disable_raw_mode()?;
+                        create_file(&dir)?;
+                        enable_raw_mode()?;
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
@@ -95,4 +105,54 @@ fn main() -> io::Result<()> {
     execute!(stdout, Show)?;
     disable_raw_mode()?;
     Ok(())
+}
+fn create_dir(path: &PathBuf) -> io::Result<()> {
+    let mut name = String::new();
+
+    print!("Enter the directory name: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut name)?;
+    let name = name.trim();
+
+    if name.is_empty() {
+        return Ok(());
+    }
+
+    let full_path = path.join(name);
+
+    fs::create_dir(full_path)?;
+
+    Ok(())
+}
+fn create_file(path: &PathBuf) -> io::Result<()> {
+    let mut name = String::new();
+
+    print!("Enter the file name: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut name)?;
+    let name = name.trim();
+
+    if name.is_empty() {
+        return Ok(());
+    }
+
+    let full_path = path.join(name);
+
+    if full_path.exists() {
+        if full_path.is_dir() {
+            println!("Error: a directory with this name already exists");
+        } else {
+            println!("Error: file already exists");
+        }
+        pause();
+        return Ok(());
+    }
+
+    fs::write(full_path, "")?;
+
+    Ok(())
+}
+fn pause() {
+    let mut pause = String::new();
+    io::stdin().read_line(&mut pause).unwrap();
 }
