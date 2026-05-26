@@ -23,6 +23,8 @@ fn main() -> io::Result<()> {
 
     let mut dir = env::current_dir()?;
 
+    let mut show_hidden = false;
+
     loop {
         let mut entries_list: Vec<(PathBuf, bool)> = Vec::new();
 
@@ -30,6 +32,14 @@ fn main() -> io::Result<()> {
             if let Ok(entry) = entry {
                 let path = entry.path();
                 let is_dir = path.is_dir();
+                let name = path.file_name().unwrap_or_default().to_string_lossy();
+
+                if !show_hidden {
+                    if name.starts_with(".") {
+                        continue;
+                    }
+                }
+
                 entries_list.push((path, is_dir));
             }
         }
@@ -125,6 +135,9 @@ fn main() -> io::Result<()> {
                             rename(path)?;
                             enable_raw_mode()?;
                         }
+                    }
+                    KeyCode::Char('.') => {
+                        show_hidden = !show_hidden;
                     }
                     KeyCode::Char('?') => {
                         execute!(
