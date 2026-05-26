@@ -2,6 +2,7 @@ use crossterm::{
     cursor::{Hide, MoveTo, Show},
     event::{self, Event, KeyCode},
     execute,
+    style::Print,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
 };
 use std::env;
@@ -14,7 +15,7 @@ fn main() -> io::Result<()> {
     enable_raw_mode()?;
 
     let mut stdout = io::stdout();
-    execute!(stdout, Hide)?;
+    execute!(stdout, Hide, Clear(ClearType::All))?;
 
     let mut selected: usize = 0;
 
@@ -36,22 +37,22 @@ fn main() -> io::Result<()> {
 
         execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
 
-        println!("{}", dir.display());
+        execute!(stdout, Print(format!("{}\r\n", dir.display())))?;
 
         for (i, (path, is_dir)) in entries_list.iter().enumerate() {
             let name = path.file_name().unwrap_or_default().to_string_lossy();
 
             if i == selected {
                 if *is_dir {
-                    println!("> {}/", name);
+                    execute!(stdout, Print(format!("> {}/\r\n", name)))?;
                 } else {
-                    println!("> {}", name);
+                    execute!(stdout, Print(format!("> {}\r\n", name)))?;
                 }
             } else {
                 if *is_dir {
-                    println!("  {}/", name);
+                    execute!(stdout, Print(format!("  {}/\r\n", name)))?;
                 } else {
-                    println!("  {}", name);
+                    execute!(stdout, Print(format!("  {}\r\n", name)))?;
                 }
             }
         }
