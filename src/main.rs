@@ -1,3 +1,4 @@
+use colored::Colorize;
 use crossterm::{
     cursor::{Hide, MoveTo, Show},
     event::{self, Event, KeyCode},
@@ -45,13 +46,13 @@ fn main() -> io::Result<()> {
 
             if i == selected {
                 if *is_dir {
-                    execute!(stdout, Print(format!("> {}/\r\n", name)))?;
+                    execute!(stdout, Print(format!("> {}/\r\n", name.blue())))?;
                 } else {
                     execute!(stdout, Print(format!("> {}\r\n", name)))?;
                 }
             } else {
                 if *is_dir {
-                    execute!(stdout, Print(format!("  {}/\r\n", name)))?;
+                    execute!(stdout, Print(format!("  {}/\r\n", name.blue())))?;
                 } else {
                     execute!(stdout, Print(format!("  {}\r\n", name)))?;
                 }
