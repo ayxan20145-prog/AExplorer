@@ -1,3 +1,84 @@
-fn main() {
-    println!("Hello, world!");
+use crossterm::{
+    cursor::{Hide, MoveTo, Show},
+    event::{self, Event, KeyCode},
+    execute,
+    terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
+};
+use std::env;
+use std::fs;
+use std::io::{self, Write};
+use std::path::PathBuf;
+use std::time::Duration;
+
+fn main() -> io::Result<()> {
+    enable_raw_mode()?;
+
+    let mut stdout = io::stdout();
+    execute!(stdout, Hide)?;
+
+    let mut selected: usize = 0;
+
+    loop {
+        let dir = env::current_dir()?;
+        let mut entries_list: Vec<(PathBuf, bool)> = Vec::new();
+
+        for entry in fs::read_dir(&dir)? {
+            if let Ok(entry) = entry {
+                let path = entry.path();
+                let is_dir = path.is_dir();
+                entries_list.push((path, is_dir));
+            }
+        }
+
+        if selected >= entries_list.len() && !entries_list.is_empty() {
+            selected = entries_list.len() - 1;
+        }
+
+        execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
+
+        println!("{}", dir.display());
+
+        for (i, (path, is_dir)) in entries_list.iter().enumerate() {
+            let name = path.file_name().unwrap_or_default().to_string_lossy();
+
+            if i == selected {
+                if *is_dir {
+                    println!("> {}/", name);
+                } else {
+                    println!("> {}", name);
+                }
+            } else {
+                if *is_dir {
+                    println!("  {}/", name);
+                } else {
+                    println!("  {}", name);
+                }
+            }
+        }
+
+        stdout.flush()?;
+
+        if event::poll(Duration::from_millis(200))? {
+            if let Event::Key(key) = event::read()? {
+                match key.code {
+                    KeyCode::Char('j') => {
+                        if selected + 1 < entries_list.len() {
+                            selected += 1;
+                        }
+                    }
+                    KeyCode::Char('k') => {
+                        if selected > 0 {
+                            selected -= 1;
+                        }
+                    }
+                    KeyCode::Char('q') => break,
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    execute!(stdout, Show)?;
+    disable_raw_mode()?;
+    Ok(())
 }
