@@ -112,6 +112,13 @@ fn main() -> io::Result<()> {
                             enable_raw_mode()?;
                         }
                     }
+                    KeyCode::Char('m') => {
+                        if let Some((path, _is_dir)) = entries_list.get(selected) {
+                            disable_raw_mode()?;
+                            movee(path)?;
+                            enable_raw_mode()?;
+                        }
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
@@ -236,6 +243,20 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
             fs::copy(&src_path, &dst_path)?;
         }
     }
+
+    Ok(())
+}
+fn movee(path: &Path) -> io::Result<()> {
+    let mut dest = String::new();
+
+    print!("Enter the destination: ");
+    io::stdout().flush()?;
+    io::stdin().read_line(&mut dest)?;
+
+    let dest = dest.trim();
+    let dest_path = Path::new(dest);
+
+    fs::rename(path, dest_path)?;
 
     Ok(())
 }
