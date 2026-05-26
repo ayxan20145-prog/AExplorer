@@ -138,6 +138,7 @@ fn main() -> io::Result<()> {
                     }
                     KeyCode::Char('.') => {
                         show_hidden = !show_hidden;
+                        selected = 0;
                     }
                     KeyCode::Char('o') => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
