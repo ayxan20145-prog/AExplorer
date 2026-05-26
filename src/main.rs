@@ -6,12 +6,12 @@ use crossterm::{
     style::Print,
     terminal::{Clear, ClearType, disable_raw_mode, enable_raw_mode},
 };
-use std::env;
 use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
+use std::{env, process::Command};
 
 fn main() -> io::Result<()> {
     enable_raw_mode()?;
@@ -139,6 +139,23 @@ fn main() -> io::Result<()> {
                     KeyCode::Char('.') => {
                         show_hidden = !show_hidden;
                     }
+                    KeyCode::Char('o') => {
+                        if let Some((path, is_dir)) = entries_list.get(selected) {
+                            if !*is_dir {
+                                let file_path = path.clone();
+                                let editor =
+                                    env::var("EDITOR").unwrap_or_else(|_| "nano".to_string());
+
+                                disable_raw_mode()?;
+                                execute!(stdout, Show)?;
+
+                                Command::new(editor).arg(&file_path).status()?;
+
+                                execute!(stdout, Hide, Clear(ClearType::All))?;
+                                enable_raw_mode()?;
+                            }
+                        }
+                    }
                     KeyCode::Char('?') => {
                         execute!(
                             stdout,
@@ -149,6 +166,7 @@ fn main() -> io::Result<()> {
                                  c -> Copy\r\n\
                                  m -> Move\r\n\
                                  r -> Rename\r\n\
+                                 . -> Toggle hidden\r\n\
                                  q -> Quit"
                             ))
                         )?;
