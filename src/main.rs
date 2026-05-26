@@ -95,6 +95,11 @@ fn main() -> io::Result<()> {
                         create_file(&dir)?;
                         enable_raw_mode()?;
                     }
+                    KeyCode::Char('d') => {
+                        if let Some((path, is_dir)) = entries_list.get(selected) {
+                            delete(path, *is_dir)?;
+                        }
+                    }
                     KeyCode::Char('q') => break,
                     _ => {}
                 }
@@ -150,6 +155,29 @@ fn create_file(path: &PathBuf) -> io::Result<()> {
 
     fs::write(full_path, "")?;
 
+    Ok(())
+}
+fn delete(path: &PathBuf, is_dir: bool) -> io::Result<()> {
+    print!(
+        "Are you sure want to delete: {}? (y/n)",
+        path.file_name().unwrap_or_default().to_string_lossy()
+    );
+    io::stdout().flush()?;
+
+    if let Event::Key(key) = event::read()? {
+        match key.code {
+            KeyCode::Char('y') => {
+                let result = if is_dir {
+                    fs::remove_dir_all(path)
+                } else {
+                    fs::remove_file(path)
+                };
+
+                result?;
+            }
+            _ => return Ok(()),
+        }
+    }
     Ok(())
 }
 fn pause() {
