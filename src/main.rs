@@ -19,8 +19,9 @@ fn main() -> io::Result<()> {
 
     let mut selected: usize = 0;
 
+    let mut dir = env::current_dir()?;
+
     loop {
-        let dir = env::current_dir()?;
         let mut entries_list: Vec<(PathBuf, bool)> = Vec::new();
 
         for entry in fs::read_dir(&dir)? {
@@ -71,6 +72,9 @@ fn main() -> io::Result<()> {
                         if selected > 0 {
                             selected -= 1;
                         }
+                    }
+                    KeyCode::Char('h') => {
+                        dir.pop();
                     }
                     KeyCode::Char('q') => break,
                     _ => {}
