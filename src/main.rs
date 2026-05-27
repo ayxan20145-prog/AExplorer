@@ -75,20 +75,20 @@ fn main() -> io::Result<()> {
         if event::poll(Duration::from_millis(200))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
-                    KeyCode::Char('j') => {
+                    KeyCode::Char('j') | KeyCode::Down => {
                         if selected + 1 < entries_list.len() {
                             selected += 1;
                         }
                     }
-                    KeyCode::Char('k') => {
+                    KeyCode::Char('k') | KeyCode::Up => {
                         if selected > 0 {
                             selected -= 1;
                         }
                     }
-                    KeyCode::Char('h') => {
+                    KeyCode::Char('h') | KeyCode::Left  => {
                         dir.pop();
                     }
-                    KeyCode::Char('l') => {
+                    KeyCode::Char('l') | KeyCode::Right => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
                             if *is_dir {
                                 dir = path.clone();
