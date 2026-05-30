@@ -55,8 +55,6 @@ AExplorer lightweight terminal-based file manager written in rust. It provides a
 
 ## ⚙️ Requirements
 
-- An OS
-- A terminal emulator (required for the terminal-launch feature)
 - A filesystem (optional)
 
 ---
