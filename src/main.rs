@@ -10,6 +10,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::path::PathBuf;
+use std::thread;
 use std::time::Duration;
 use std::{env, process::Command};
 
@@ -28,20 +29,28 @@ fn main() -> io::Result<()> {
     loop {
         let mut entries_list: Vec<(PathBuf, bool)> = Vec::new();
 
-        for entry in fs::read_dir(&dir)? {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                let is_dir = path.is_dir();
-                let name = path.file_name().unwrap_or_default().to_string_lossy();
-
-                if !show_hidden {
-                    if name.starts_with(".") {
-                        continue;
-                    }
-                }
-
-                entries_list.push((path, is_dir));
+        let entries = match fs::read_dir(&dir) {
+            Ok(e) => e,
+            Err(e) => {
+                execute!(stdout, Print(format!("Error: {e}\r\n")))?;
+                thread::sleep(Duration::from_secs(1));
+                dir.pop();
+                continue;
             }
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let is_dir = path.is_dir();
+            let name = path.file_name().unwrap_or_default().to_string_lossy();
+
+            if !show_hidden {
+                if name.starts_with(".") {
+                    continue;
+                }
+            }
+
+            entries_list.push((path, is_dir));
         }
 
         if selected >= entries_list.len() && !entries_list.is_empty() {
@@ -85,7 +94,7 @@ fn main() -> io::Result<()> {
                             selected -= 1;
                         }
                     }
-                    KeyCode::Char('h') | KeyCode::Left  => {
+                    KeyCode::Char('h') | KeyCode::Left => {
                         dir.pop();
                     }
                     KeyCode::Char('l') | KeyCode::Right => {
