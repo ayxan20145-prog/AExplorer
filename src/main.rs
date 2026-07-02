@@ -149,7 +149,7 @@ fn main() -> io::Result<()> {
                         show_hidden = !show_hidden;
                         selected = 0;
                     }
-                    KeyCode::Char('o') => {
+                    KeyCode::Enter => {
                         if let Some((path, is_dir)) = entries_list.get(selected) {
                             if !*is_dir {
                                 let file_path = path.clone();
